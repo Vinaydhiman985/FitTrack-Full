@@ -1,0 +1,12 @@
+{
+  "name": "fittrack-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix fittrack-backend\" \"npm start --prefix FitTrack-App-main\"",
+    "install:all": "npm install && npm install --prefix fittrack-backend && npm install --prefix FitTrack-App-main"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

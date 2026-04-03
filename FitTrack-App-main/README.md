@@ -1,0 +1,183 @@
+# 🎮🏋️ FitTrack App
+
+FitTrack is an innovative **fitness-based gaming application** that combines physical activity with engaging gameplay. Instead of traditional tracking, FitTrack introduces a unique **territory capture system**, where users can claim and expand virtual areas through real-world fitness activities.
+
+Built using **React Native with Expo Router**, the app aims to make fitness more interactive, competitive, and fun.
+
+---
+
+## 🚀 Features
+
+* 🎮 **Gamified Fitness Experience** – Turn workouts into an engaging game
+* 🗺️ **Territory Capture System** – Capture and control virtual areas through activity
+* 👤 **User Authentication** – Secure login and account management *(planned/implemented)*
+* 📊 **Activity Tracking** – Track workouts, steps, or movement-based progress
+* 🏆 **Competitive Gameplay** – Compete with other users for territory dominance *(upcoming)*
+* 📈 **Progress Tracking** – Monitor your growth and achievements
+* 🔄 **Real-time Updates** *(planned)* – Dynamic gameplay changes based on user activity
+* 📱 **Cross-Platform Mobile App** – Runs on Android & iOS using React Native
+
+---
+
+## 🛠️ Tech Stack
+
+**Mobile App:**
+
+* React Native
+* Expo
+* Expo Router
+
+**Backend (Planned / Optional):**
+
+* Node.js
+* Express.js
+
+**Database (Planned / Optional):**
+
+* MongoDB / Firebase
+
+**Tools:**
+
+* Git & GitHub
+
+---
+
+## 📂 Project Structure
+
+```
+FitTrack-App/
+│── app/                 # Expo Router (file-based routing)
+│   ├── (tabs)/         # Tab navigation screens
+│   ├── index.js        # Entry screen
+│   └── _layout.js      # Root layout
+│
+│── assets/             # Images, icons, fonts
+│── components/         # Reusable UI components
+│── constants/          # App constants
+│── hooks/              # Custom hooks
+│── services/           # API / business logic
+│
+│── package.json
+│── README.md
+```
+
+---
+
+## 📦 Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/neeraj-ch7/FitTrack-App.git
+cd FitTrack-App
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+---
+
+## ▶️ Available Scripts
+
+In the project directory, you can run:
+
+### `npm start`
+
+Starts the Expo development server.
+
+```bash
+npx expo start
+```
+
+* Scan the QR code using Expo Go (Android/iOS)
+* Or run on emulator/simulator
+
+---
+
+### `npm run android`
+
+Run the app on Android emulator/device.
+
+---
+
+### `npm run ios`
+
+Run the app on iOS simulator (Mac only).
+
+---
+
+### `npm run web`
+
+Run the app in the browser.
+
+---
+
+## 🧑‍💻 Usage
+
+1. Launch the app using Expo
+2. Create or log into your account *(if implemented)*
+3. Start moving / working out
+4. Capture territories through your activity
+5. Compete and expand your dominance in the game world
+
+---
+
+## 🚀 Deployment
+
+This app can be deployed using:
+
+* Expo Application Services (EAS)
+* Google Play Store
+* Apple App Store
+
+Basic steps:
+
+1. Install Expo CLI
+2. Configure app.json / app.config.js
+3. Run:
+
+```bash
+npx expo prebuild
+npx expo build
+```
+
+4. Publish using Expo or EAS
+
+---
+
+## 🔮 Future Scope
+
+* 🌍 Live multiplayer territory battles
+* 📡 Real-time GPS-based tracking
+* 🧠 AI-based fitness recommendations
+* 🏅 Leaderboards & seasonal events
+* 🔗 Social features & team play
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+---
+
+## 👨‍💻 Author
+
+**Neeraj Chauhan**
+
+* GitHub: https://github.com/neeraj-ch7
+
+---
+
+## ⭐ Support
+
+If you like this project, give it a ⭐ and be part of the journey to revolutionize fitness through gaming!

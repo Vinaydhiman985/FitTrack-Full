@@ -1,0 +1,151 @@
+export const XP_PER_LEVEL = 5000;
+export const MAP_COLS = 17;
+export const MAP_ROWS = 26;
+export const CELL_SIZE = 22;
+
+export const PlayerColors = {
+  you: '#F4621F',
+  marcus: '#0EA5E9',
+  priya: '#7C3AED',
+  jake: '#EF4444',
+};
+
+export const PlayerNames = {
+  you: 'You',
+  marcus: 'Marcus',
+  priya: 'Priya',
+  jake: 'Jake',
+};
+
+export const AVATAR_CONFIGS = {
+  // Free starter
+  blaze: {
+    name: 'Blaze',
+    price: 0,
+    owned: true,
+    desc: 'The fearless street sprinter with fire in his veins',
+    face: '😤',
+    effect: '🔥',
+    shirtIcon: '⚡',
+    color: '#F4621F',
+    grad: '#FF8A50',
+    skin: '#FDBCB4',
+    hair: '#1F2937',
+    pantColor: '#1F2937',
+    shoeColor: '#DC2626',
+  },
+  // 500 coins
+  nova: {
+    name: 'Nova',
+    price: 500,
+    owned: false,
+    desc: 'Cosmic queen who runs at the speed of starlight',
+    face: '🌟',
+    effect: '✨',
+    shirtIcon: '🌙',
+    color: '#7C3AED',
+    grad: '#A78BFA',
+    skin: '#C68642',
+    hair: '#5B21B6',
+    pantColor: '#1E1B4B',
+    shoeColor: '#7C3AED',
+  },
+  // 800 coins
+  surge: {
+    name: 'Surge',
+    price: 800,
+    owned: false,
+    desc: 'The electric athlete who shocks every finish line',
+    face: '⚡',
+    effect: '💥',
+    shirtIcon: '🔌',
+    color: '#0EA5E9',
+    grad: '#38BDF8',
+    skin: '#F1C27D',
+    hair: '#0C4A6E',
+    pantColor: '#0C4A6E',
+    shoeColor: '#0EA5E9',
+  },
+  // 1500 coins
+  viper: {
+    name: 'Viper',
+    price: 1500,
+    owned: false,
+    desc: 'Ruthless street racer with cold precision',
+    face: '😈',
+    effect: '🐍',
+    shirtIcon: '💀',
+    color: '#EF4444',
+    grad: '#F87171',
+    skin: '#8D5524',
+    hair: '#111827',
+    pantColor: '#111827',
+    shoeColor: '#EF4444',
+  },
+  // 2500 coins
+  frost: {
+    name: 'Frost',
+    price: 2500,
+    owned: false,
+    desc: 'Ice-cool champion who never breaks a sweat',
+    face: '🥶',
+    effect: '❄️',
+    shirtIcon: '🏔️',
+    color: '#06B6D4',
+    grad: '#22D3EE',
+    skin: '#E8D5C4',
+    hair: '#E0F2FE',
+    pantColor: '#164E63',
+    shoeColor: '#06B6D4',
+  },
+  // 5000 coins
+  legend: {
+    name: 'Legend',
+    price: 5000,
+    owned: false,
+    desc: 'The one and only. Crowned. Untouchable. A living myth.',
+    face: '👑',
+    effect: '🌈',
+    shirtIcon: '🏆',
+    color: '#F59E0B',
+    grad: '#FCD34D',
+    skin: '#FDBCB4',
+    hair: '#92400E',
+    pantColor: '#78350F',
+    shoeColor: '#D97706',
+  },
+};
+
+export const BADGES = [
+  { id: 'first_steps', emoji: '👟', name: 'First Steps', desc: 'Walk 1,000 steps' },
+  { id: 'zone_hunter', emoji: '🏚️', name: 'Zone Hunter', desc: 'Capture 5 zones' },
+  { id: 'streak_7', emoji: '🔥', name: 'On Fire', desc: '7-day streak' },
+  { id: 'coins_500', emoji: '💰', name: 'Coin Hoarder', desc: 'Earn 500 coins' },
+  { id: 'level_5', emoji: '⭐', name: 'Rising Star', desc: 'Reach level 5' },
+  { id: 'battle_win', emoji: '⚔️', name: 'Conqueror', desc: 'Win 3 territory battles' },
+  { id: 'marathon', emoji: '🏃', name: 'Marathoner', desc: 'Walk 10km total' },
+  { id: 'legend_buy', emoji: '👑', name: 'Legendary', desc: 'Own a legendary avatar' },
+];
+
+export const DEFAULT_CHALLENGES = [
+  { id: 'steps_daily', label: 'Reach 8,000 steps today', current: 0, target: 8000, icon: '👟', color: '#F4621F', done: false },
+  { id: 'weekly_steps', label: 'Log 35,000 steps this week', current: 0, target: 35000, icon: '📈', color: '#0EA5E9', done: false },
+  { id: 'streak_7', label: 'Maintain 7-day streak', current: 0, target: 7, icon: '🔥', color: '#F59E0B', done: false },
+];
+
+export const DEFAULT_USER = {
+  name: '',
+  username: '',
+  level: 1,
+  xp: 0,
+  coins: 100,
+  totalSteps: 0,
+  distance: 0,
+  streak: 0,
+  zones: 0,
+  ownedAvatars: ['blaze'],
+  selectedAvatar: 'blaze',
+  profilePic: null,
+  badges: [],
+  settings: { notifications: true, gps: true, privacy: false },
+};
