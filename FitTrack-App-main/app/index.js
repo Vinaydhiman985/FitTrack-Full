@@ -11,12 +11,17 @@ import {
   View,
 } from "react-native";
 
-export default function AuthScreen({ onLogin }) {
-  const [mode, setMode] = useState('login');
+export default function AuthScreen({ onLogin, initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Sync if parent changes initialMode (e.g. modal redirects to sign-up)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // (no effect needed — useState captures initialMode on first render;
+  //  the parent re-mounts this component when loggedIn flips to false)
 
   const switchMode = (m) => {
     if (loading) return;
