@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '../constants';
 import { api } from '../utils/api';
 
 import AuthScreen from './index';
+import SignInModal from './components/SignInModal';
 import HomeScreen from './(tabs)/index';
 import TerritoryScreen from './(tabs)/territory';
 import TrackingScreen from './(tabs)/track';
@@ -27,11 +28,16 @@ function AppShell() {
     refreshLeaderboard,
     refreshShop,
     logoutSession,
+    signInModalVisible,
+    signInModalMessage,
+    hideSignInModal,
   } = useApp();
   const [loggedIn, setLoggedIn] = useState(false);
   const [booting, setBooting] = useState(true);
   const [screen, setScreen] = useState('home');
   const [key, setKey] = useState(0);
+  // Tracks which mode (login/signup) was requested from the modal
+  const [authMode, setAuthMode] = useState('login');
 
   useEffect(() => {
     if (!authReady) return;
@@ -78,6 +84,7 @@ function AppShell() {
     ]);
     setLoggedIn(true);
     setScreen('home');
+    setAuthMode('login'); // reset mode after successful login
   };
 
   const logout = async () => {
@@ -104,7 +111,7 @@ function AppShell() {
       edges={['top', 'left', 'right']}
     >
       {!loggedIn ? (
-        <AuthScreen onLogin={login} />
+        <AuthScreen onLogin={login} initialMode={authMode} />
       ) : (
         <View style={styles.inner}>
           <View style={styles.screenWrap}>
@@ -125,6 +132,23 @@ function AppShell() {
           {showNav && <BottomNav active={screen} onNav={nav} />}
         </View>
       )}
+
+      {/* Global Sign-In Modal — shown when a protected action is attempted */}
+      <SignInModal
+        visible={signInModalVisible}
+        message={signInModalMessage}
+        onClose={hideSignInModal}
+        onSignIn={() => {
+          hideSignInModal();
+          setAuthMode('login');
+          setLoggedIn(false);
+        }}
+        onSignUp={() => {
+          hideSignInModal();
+          setAuthMode('signup');
+          setLoggedIn(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

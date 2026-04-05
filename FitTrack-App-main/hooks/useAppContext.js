@@ -133,6 +133,30 @@ export function AppProvider({ children }) {
   const [xpFloats, setXpFloats] = useState([]);
   const toastRef = useRef();
 
+  // ── Sign-In Modal ──────────────────────────────────────────────
+  const [signInModalVisible, setSignInModalVisible] = useState(false);
+  const [signInModalMessage, setSignInModalMessage] = useState(null);
+
+  /** Call this to gate any action behind authentication */
+  const requireAuth = useCallback((isLoggedIn, action, message) => {
+    if (isLoggedIn) {
+      action?.();
+    } else {
+      setSignInModalMessage(message || null);
+      setSignInModalVisible(true);
+    }
+  }, []);
+
+  const showSignInModal = useCallback((message) => {
+    setSignInModalMessage(message || null);
+    setSignInModalVisible(true);
+  }, []);
+
+  const hideSignInModal = useCallback(() => {
+    setSignInModalVisible(false);
+    setSignInModalMessage(null);
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -341,6 +365,12 @@ export function AppProvider({ children }) {
       addXpFloat,
       addCoins,
       addXp,
+      // Sign-In Modal
+      signInModalVisible,
+      signInModalMessage,
+      requireAuth,
+      showSignInModal,
+      hideSignInModal,
     }}>
       {children}
     </AppCtx.Provider>

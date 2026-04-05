@@ -94,3 +94,21 @@ export const login = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// DEV ONLY — List all registered users (password excluded for safety)
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find(
+      {},
+      { password: 0, verificationCode: 0, verificationExpiry: 0 }
+    ).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: `${users.length} user(s) registered`,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
