@@ -7,6 +7,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
+  Image,
+  Linking,
 } from "react-native";
 import { AVATAR_CONFIGS } from '../../constants';
 import { useApp } from '../../hooks';
@@ -26,9 +29,49 @@ function getRarity(price) {
   return RARITY[price] ?? { label: 'Special', color: '#F4621F', bg: '#FFF1EB' };
 }
 
+function PreviewModal({ visible, cfg, onClose }) {
+  if (!cfg) return null;
+
+  const note = cfg.previewNote || 'Optimised GLB under 5 MB. Tap open if the 3D viewer is supported on your device.';
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>{cfg.name} • 3D look</Text>
+          <Text style={styles.modalDesc}>{cfg.desc}</Text>
+          <Text style={styles.modalNote}>{note}</Text>
+
+          {cfg.previewStill ? (
+            <Image source={{ uri: cfg.previewStill }} style={styles.previewImg} resizeMode="cover" />
+          ) : (
+            <View style={styles.previewPlaceholder}>
+              <Text style={{ color: '#6B7280', fontWeight: '700' }}>Preview coming soon</Text>
+            </View>
+          )}
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            <TouchableOpacity style={styles.modalBtnGhost} onPress={onClose}>
+              <Text style={styles.modalBtnGhostText}>Close</Text>
+            </TouchableOpacity>
+            {cfg.modelUrl && (
+              <TouchableOpacity
+                style={[styles.modalBtn, { flex: 1 }]}
+                onPress={() => Linking.openURL(cfg.modelUrl).catch(() => {})}
+              >
+                <Text style={styles.modalBtnText}>Open 3D model</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function AvatarCard({ avatarKey, cfg, owned, equipped, canBuy, dark, onBuy, onEquip, isSelected, onSelect }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rarity = getRarity(cfg.price);
+  const hasPreview = !!cfg.previewStill || !!cfg.modelUrl;
 
   const handlePress = () => {
     Animated.sequence([
@@ -60,6 +103,12 @@ function AvatarCard({ avatarKey, cfg, owned, equipped, canBuy, dark, onBuy, onEq
         <View style={[styles.rarityBadge, { backgroundColor: rarity.bg }]}>
           <Text style={[styles.rarityText, { color: rarity.color }]}>{rarity.label}</Text>
         </View>
+
+        {hasPreview && (
+          <View style={styles.previewPill}>
+            <Text style={styles.previewPillText}>3D</Text>
+          </View>
+        )}
 
         {/* Avatar preview */}
         <View style={styles.avatarWrap}>
@@ -117,6 +166,7 @@ export default function ShopScreen() {
   } = useApp();
 
   const [selected, setSelected] = useState(user.selectedAvatar || 'blaze');
+  const [previewCfg, setPreviewCfg] = useState(null);
 
   const avatars = shopAvatars.length > 0
     ? shopAvatars.map((avatar) => ({
@@ -193,6 +243,15 @@ export default function ShopScreen() {
             <View style={[styles.heroRarity, { backgroundColor: 'rgba(0,0,0,0.18)' }]}>
               <Text style={styles.heroRarityText}>{getRarity(selectedCfg.price).label}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.previewBtn}
+              onPress={() => setPreviewCfg(selectedCfg)}
+              disabled={!selectedCfg.previewStill && !selectedCfg.modelUrl}
+            >
+              <Text style={styles.previewBtnText}>
+                {selectedCfg.previewStill || selectedCfg.modelUrl ? 'Preview in 3D' : '3D coming soon'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -245,6 +304,7 @@ export default function ShopScreen() {
 
         <View style={{ height: 100 }} />
       </View>
+      <PreviewModal visible={!!previewCfg} cfg={previewCfg} onClose={() => setPreviewCfg(null)} />
     </ScrollView>
   );
 }
@@ -299,6 +359,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  previewBtn: {
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    alignSelf: 'flex-start',
+  },
+  previewBtnText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
 
   // Inner
@@ -361,6 +435,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.3,
   },
+  previewPill: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: '#1F2937',
+  },
+  previewPillText: {
+    color: '#FBBF24',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
   avatarWrap: {
     marginTop: 18,
     marginBottom: 10,
@@ -406,4 +495,63 @@ const styles = StyleSheet.create({
   },
   tipEmoji: { fontSize: 18 },
   tipText:  { flex: 1, fontSize: 12, fontWeight: '600', color: '#F4621F', lineHeight: 17 },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 18,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#0F1115',
+    borderRadius: 18,
+    padding: 16,
+  },
+  modalTitle: { color: '#F8FAFC', fontSize: 18, fontWeight: '900', letterSpacing: 0.2 },
+  modalDesc:  { color: '#CBD5E1', fontSize: 12, marginTop: 6, lineHeight: 16 },
+  modalNote:  { color: '#9CA3AF', fontSize: 11, marginTop: 4 },
+  previewImg: {
+    width: '100%',
+    height: 320,
+    borderRadius: 14,
+    marginTop: 12,
+    backgroundColor: '#1F2937',
+  },
+  previewPlaceholder: {
+    width: '100%',
+    height: 220,
+    borderRadius: 14,
+    marginTop: 12,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: '#F59E0B',
+    alignItems: 'center',
+    flex: 1,
+  },
+  modalBtnText: {
+    color: '#0F0F13',
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+  modalBtnGhost: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    backgroundColor: '#111827',
+  },
+  modalBtnGhostText: {
+    color: '#E5E7EB',
+    fontWeight: '800',
+  },
 });
