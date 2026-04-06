@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import apiRouter from "./routes/index.js";
+import path from "path";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use("/static", express.static(path.join(process.cwd(), "public")));
 
 connectDB();
 

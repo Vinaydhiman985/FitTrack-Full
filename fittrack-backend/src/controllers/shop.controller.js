@@ -1,52 +1,47 @@
 import User from '../models/user.model.js';
 
-// Keep this list in sync with mobile constants/AVATAR_CONFIGS for prices + ids
+// Keep this list in sync with mobile constants/AVATAR_CONFIGS for prices + ids.
+// Assets are resolved at runtime using buildAvatarWithAssets().
 const AVATARS = [
-  { id: 'blaze',  name: 'Blaze',         price: 0 },
-  { id: 'nova',   name: 'Nova',          price: 500 },
-  { id: 'surge',  name: 'Surge',         price: 800 },
-  { id: 'viper',  name: 'Viper',         price: 1500 },
-  { id: 'frost',  name: 'Frost',         price: 2500 },
-  { id: 'legend', name: 'Legend',        price: 5000 },
-  // 3D-inspired additions (placeholder assets; swap URLs in production)
-  {
-    id: 'fae',
-    name: 'Fae Warden',
-    price: 800,
-    previewStill: 'https://placehold.co/480x640/0f172a/9ef0c1?text=Fae+Warden+3D',
-    modelUrl: null,
-  },
-  {
-    id: 'cyber',
-    name: 'Cyber Ninja',
-    price: 1500,
-    previewStill: 'https://placehold.co/480x640/0f172a/7dd3fc?text=Cyber+Ninja+3D',
-    modelUrl: null,
-  },
-  {
-    id: 'mech',
-    name: 'Pocket Mech',
-    price: 2500,
-    previewStill: 'https://placehold.co/480x640/1f2937/c4b5fd?text=Pocket+Mech+3D',
-    modelUrl: null,
-  },
-  {
-    id: 'astral',
-    name: 'Astral Scout',
-    price: 5000,
-    previewStill: 'https://placehold.co/480x640/0b1220/7dd3fc?text=Astral+Scout+3D',
-    modelUrl: null,
-  },
+  { id: 'blaze',  name: 'Blaze',         price: 0,    previewFile: 'blaze.png',  modelFile: null },
+  { id: 'nova',   name: 'Nova',          price: 500,  previewFile: 'nova.png',   modelFile: null },
+  { id: 'surge',  name: 'Surge',         price: 800,  previewFile: 'surge.png',  modelFile: null },
+  { id: 'viper',  name: 'Viper',         price: 1500, previewFile: 'viper.png',  modelFile: null },
+  { id: 'frost',  name: 'Frost',         price: 2500, previewFile: 'frost.png',  modelFile: null },
+  { id: 'legend', name: 'Legend',        price: 5000, previewFile: 'legend.png', modelFile: null },
+  // 3D-inspired additions (drop your GLB/PNG into /public/avatars and set modelFile/previewFile)
+  { id: 'fae',    name: 'Fae Warden',    price: 800,  previewFile: 'fae.png',    modelFile: 'fae.glb' },
+  { id: 'cyber',  name: 'Cyber Ninja',   price: 1500, previewFile: 'cyber.png',  modelFile: 'cyber.glb' },
+  { id: 'mech',   name: 'Pocket Mech',   price: 2500, previewFile: 'mech.png',   modelFile: 'mech.glb' },
+  { id: 'astral', name: 'Astral Scout',  price: 5000, previewFile: 'astral.png', modelFile: 'astral.glb' },
 ];
+
+const buildAssetBase = (req) => {
+  if (process.env.ASSET_BASE_URL) return process.env.ASSET_BASE_URL.replace(/\/+$/, '');
+  const host = req.get('host');
+  return `${req.protocol}://${host}/static/avatars`;
+};
+
+const buildAvatarWithAssets = (avatar, req) => {
+  const base = buildAssetBase(req);
+  return {
+    ...avatar,
+    previewStill: avatar.previewFile ? `${base}/${avatar.previewFile}` : avatar.previewStill || null,
+    modelUrl: avatar.modelFile ? `${base}/${avatar.modelFile}` : avatar.modelUrl || null,
+  };
+};
 
 export const getAvatars = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    const avatars = AVATARS.map((avatar) => ({
-      ...avatar,
-      owned: user.ownedAvatars.includes(avatar.id),
-      equipped: user.avatar === avatar.id,
-    }));
+    const avatars = AVATARS.map((avatar) => {
+      const enriched = buildAvatarWithAssets(avatar, req);
+      return {
+        ...enriched,
+        owned: user.ownedAvatars.includes(avatar.id),
+        equipped: user.avatar === avatar.id,
+      };
+    });
     res.status(200).json({ data: avatars, coins: user.coins });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -68,7 +63,7 @@ export const buyAvatar = async (req, res) => {
       message: avatar.name + ' purchased!',
       coins: user.coins,
       ownedAvatars: user.ownedAvatars,
-      avatar,
+      avatar: buildAvatarWithAssets(avatar, req),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

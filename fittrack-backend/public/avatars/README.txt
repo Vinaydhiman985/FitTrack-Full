@@ -1,0 +1,1 @@
+Place avatar preview PNGs and GLB files here. Example filenames: fae.png, fae.glb, cyber.png, cyber.glb, mech.png, mech.glb, astral.png, astral.glb. The backend serves them at /static/avatars/<filename>.
