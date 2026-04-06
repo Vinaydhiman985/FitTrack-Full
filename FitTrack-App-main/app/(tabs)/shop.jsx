@@ -15,6 +15,7 @@ import { AVATAR_CONFIGS } from '../../constants';
 import { useApp } from '../../hooks';
 import { api } from '../../utils/api';
 import WalkingAvatar from '../components/WalkingAvatar';
+import Avatar3DViewer from '../components/Avatar3DViewer';
 
 const RARITY = {
   0:    { label: 'Free',      color: '#6B7280', bg: '#F3F4F6' },
@@ -41,7 +42,9 @@ function PreviewModal({ visible, cfg, onClose }) {
           <Text style={styles.modalDesc}>{cfg.desc}</Text>
           <Text style={styles.modalNote}>{note}</Text>
 
-          {cfg.previewStill ? (
+          {cfg.modelUrl ? (
+            <Avatar3DViewer modelUrl={cfg.modelUrl} />
+          ) : cfg.previewStill ? (
             <Image source={{ uri: cfg.previewStill }} style={styles.previewImg} resizeMode="cover" />
           ) : (
             <View style={styles.previewPlaceholder}>
