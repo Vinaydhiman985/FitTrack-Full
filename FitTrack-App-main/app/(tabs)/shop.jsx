@@ -42,8 +42,8 @@ function PreviewModal({ visible, cfg, onClose }) {
           <Text style={styles.modalDesc}>{cfg.desc}</Text>
           <Text style={styles.modalNote}>{note}</Text>
 
-          {cfg.modelUrl ? (
-            <Avatar3DViewer modelUrl={cfg.modelUrl} />
+          {cfg.modelUrl || cfg.previewStill ? (
+            <Avatar3DViewer modelUrl={cfg.modelUrl} cfg={cfg} />
           ) : cfg.previewStill ? (
             <Image source={{ uri: cfg.previewStill }} style={styles.previewImg} resizeMode="cover" />
           ) : (
