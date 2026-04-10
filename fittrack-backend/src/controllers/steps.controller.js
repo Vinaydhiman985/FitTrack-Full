@@ -1,96 +1,100 @@
+import asyncHandler from '../utils/asyncHandler.js';
 import Steps from '../models/steps.model.js';
 import User from '../models/user.model.js';
 
 const XP_PER_LEVEL = 5000;
+const STEP_TO_KM = 0.000762;
+const STEP_TO_CAL = 0.04;
 
-export const logSteps = async (req, res) => {
-  try {
-    const { steps: stepsToAdd } = req.body;
-    const userId = req.user._id;
+const getTodayDateKey = () => new Date().toISOString().split('T')[0];
 
-    if (!stepsToAdd || stepsToAdd <= 0) {
-      return res.status(400).json({ error: 'Valid steps increment is required' });
-    }
+// @desc    Log steps
+// @route   POST /api/steps/log
+export const logSteps = asyncHandler(async (req, res) => {
+  const stepsToAdd = Number(req.body.steps || 0);
 
-    const today = new Date().toISOString().split('T')[0];
-    
-    // 1) Find or create today's steps log
-    let stepsLog = await Steps.findOne({ userId, date: today });
-    if (!stepsLog) {
-      stepsLog = new Steps({ userId, date: today, steps: 0, distance: 0, calories: 0, coins: 0, xp: 0 });
-    }
+  if (stepsToAdd <= 0) {
+    res.status(400);
+    throw new Error('Please provide a positive number of steps');
+  }
 
-    // 2) Add the new steps
-    stepsLog.steps += stepsToAdd;
-    
-    // 3) Recalculate daily totals based on the new total steps
-    stepsLog.distance = parseFloat((stepsLog.steps * 0.000762).toFixed(2));
-    stepsLog.calories = parseFloat((stepsLog.steps * 0.04).toFixed(2));
-    
-    // 4) Calculate new rewards earned from this specific increment
-    const coinsEarned = Math.floor(stepsToAdd / 100);
-    const xpEarned = Math.floor(stepsToAdd / 50);
-    
-    stepsLog.coins += coinsEarned;
-    stepsLog.xp += xpEarned;
-    await stepsLog.save();
+  const userId = req.user._id;
+  const dateStr = getTodayDateKey();
 
-    // 5) Update global User stats
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+  // Find or create steps log for today
+  let stepsLog = await Steps.findOne({ userId, date: dateStr });
+  if (!stepsLog) {
+    stepsLog = new Steps({ userId, date: dateStr });
+  }
 
-    user.totalSteps += stepsToAdd;
-    user.coins += coinsEarned;
-    user.xp += xpEarned;
+  // Calculate earnings
+  const earnedCoins = Math.floor(stepsToAdd / 100);
+  const earnedXp = Math.floor(stepsToAdd / 50);
 
-    while (user.xp >= XP_PER_LEVEL) {
-      user.xp -= XP_PER_LEVEL;
-      user.level += 1;
-    }
+  // Update today's log
+  stepsLog.steps += stepsToAdd;
+  stepsLog.distance = Number((stepsLog.steps * STEP_TO_KM).toFixed(2));
+  stepsLog.calories = Number((stepsLog.steps * STEP_TO_CAL).toFixed(2));
+  stepsLog.coins += earnedCoins;
+  stepsLog.xp += earnedXp;
+  await stepsLog.save();
 
-    await user.save();
-    
-    const todayData = {
+  // Update cumulative user stats
+  const user = await User.findById(userId);
+  user.totalSteps += stepsToAdd;
+  user.coins += earnedCoins;
+  user.xp += earnedXp;
+
+  // Handle Level Up
+  while (user.xp >= XP_PER_LEVEL) {
+    user.xp -= XP_PER_LEVEL;
+    user.level += 1;
+  }
+  await user.save();
+
+  res.json({
+    message: 'Steps logged successfully',
+    today: {
       steps: stepsLog.steps,
       distance: stepsLog.distance,
       calories: stepsLog.calories,
       coins: stepsLog.coins,
       xp: stepsLog.xp,
-      date: stepsLog.date,
-    };
+    },
+    totals: {
+      totalSteps: user.totalSteps,
+      coins: user.coins,
+      xp: user.xp,
+      level: user.level,
+    }
+  });
+});
 
-    return res.status(200).json({
-      message: 'Steps updated',
-      data: todayData,
-      totals: {
-        totalSteps: user.totalSteps,
-        coins: user.coins,
-        xp: user.xp,
-        level: user.level,
-      },
+// @desc    Get today's steps
+// @route   GET /api/steps/today
+export const getTodaySteps = asyncHandler(async (req, res) => {
+  const dateStr = getTodayDateKey();
+  const log = await Steps.findOne({ userId: req.user._id, date: dateStr });
+
+  if (log) {
+    res.json(log);
+  } else {
+    res.json({
+      steps: 0,
+      distance: 0,
+      calories: 0,
+      coins: 0,
+      xp: 0,
+      date: dateStr,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-};
+});
 
-export const getTodaySteps = async (req, res) => {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const stepsLog = await Steps.findOne({ userId: req.user._id, date: today });
-    res.status(200).json({ data: stepsLog || { steps: 0, distance: 0, calories: 0, coins: 0, xp: 0, date: today } });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const getStepsHistory = async (req, res) => {
-  try {
-    const history = await Steps.find({ userId: req.user._id }).sort({ date: -1 }).limit(7);
-    res.status(200).json({ data: history });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// @desc    Get steps history
+// @route   GET /api/steps/history
+export const getStepsHistory = asyncHandler(async (req, res) => {
+  const history = await Steps.find({ userId: req.user._id })
+    .sort({ date: -1 })
+    .limit(30);
+  res.json(history);
+});

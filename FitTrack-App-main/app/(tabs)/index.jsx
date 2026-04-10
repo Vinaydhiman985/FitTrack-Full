@@ -1,7 +1,7 @@
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AVATAR_CONFIGS, XP_PER_LEVEL } from '../../constants';
 import { useApp } from '../../hooks';
-import MapPreview from '../components/MapPreview';
+import MapPreview from '../../components/Maps/MapPreview';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 

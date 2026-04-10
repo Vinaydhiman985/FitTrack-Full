@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, Platform } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import AchievementPopup from './components/AchievementPopup';
-import BottomNav from './components/BottomNav';
+import AchievementPopup from '../components/AchievementPopup';
+import BottomNav from '../components/BottomNav';
 import { AppProvider, useApp } from '../hooks';
 import { STORAGE_KEYS } from '../constants';
 import { api } from '../utils/api';
 
 import AuthScreen from './index';
-import SignInModal from './components/SignInModal';
+import SignInModal from '../components/SignInModal';
 import HomeScreen from './(tabs)/index';
 import TerritoryScreen from './(tabs)/territory';
 import TrackingScreen from './(tabs)/track';
@@ -36,27 +36,35 @@ function AppShell() {
   const [booting, setBooting] = useState(true);
   const [screen, setScreen] = useState('home');
   const [key, setKey] = useState(0);
-  // Tracks which mode (login/signup) was requested from the modal
   const [authMode, setAuthMode] = useState('login');
 
   useEffect(() => {
     if (!authReady) return;
 
     const restoreSession = async () => {
-      if (!authToken) {
+      // Check for token in storage (works on both web and mobile)
+      const savedToken = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
+      if (savedToken) {
+        await setAuthToken(savedToken);
+      }
+
+      if (!authToken && !savedToken) {
         setLoggedIn(false);
         setBooting(false);
         return;
       }
 
+      const activeToken = authToken || savedToken;
+
       try {
-        const nextUser = await refreshProfile(authToken);
+        const nextUser = await refreshProfile(activeToken);
         await Promise.all([
-          refreshLeaderboard(authToken, nextUser?.id),
-          refreshShop(authToken).catch(() => []),
+          refreshLeaderboard(activeToken, nextUser?.id),
+          refreshShop(activeToken).catch(() => []),
         ]);
         setLoggedIn(true);
       } catch (_error) {
+        console.error('[AppShell] restore session error:', _error.message);
         await logoutSession();
         setLoggedIn(false);
       } finally {
@@ -65,8 +73,7 @@ function AppShell() {
     };
 
     restoreSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady]); // Run ONCE when auth context is ready — not on every token change
+  }, [authReady]);
 
   const nav = (s) => { setScreen(s); setKey(k => k + 1); };
 
@@ -76,7 +83,9 @@ function AppShell() {
       : await api.login({ email, password });
 
     await setAuthToken(response.token);
+    await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
     await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+    
     const nextUser = await refreshProfile(response.token);
     await Promise.all([
       refreshLeaderboard(response.token, nextUser?.id),
@@ -84,11 +93,12 @@ function AppShell() {
     ]);
     setLoggedIn(true);
     setScreen('home');
-    setAuthMode('login'); // reset mode after successful login
+    setAuthMode('login');
   };
 
   const logout = async () => {
     await logoutSession();
+    await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
     setLoggedIn(false);
     setScreen('home');
   };
@@ -107,7 +117,10 @@ function AppShell() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: dark ? '#0F0F13' : '#F7F7FA' }]}
+      style={[
+        styles.container, 
+        { backgroundColor: dark ? '#0F0F13' : '#F7F7FA' }
+      ]}
       edges={['top', 'left', 'right']}
     >
       {!loggedIn ? (
@@ -133,7 +146,6 @@ function AppShell() {
         </View>
       )}
 
-      {/* Global Sign-In Modal — shown when a protected action is attempted */}
       <SignInModal
         visible={signInModalVisible}
         message={signInModalMessage}

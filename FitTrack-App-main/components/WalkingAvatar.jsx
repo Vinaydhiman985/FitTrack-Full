@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { AVATAR_CONFIGS } from '../../constants';
+import { AVATAR_CONFIGS } from '../constants';
 
 /**
  * Human-style walking avatar with:

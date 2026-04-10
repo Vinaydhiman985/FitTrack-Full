@@ -1,11 +1,13 @@
 import express from 'express';
 import { logSteps, getTodaySteps, getStepsHistory } from '../controllers/steps.controller.js';
-import protect from '../middleware/auth.middleware.js';
+import auth from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/log', protect, logSteps);
-router.get('/today', protect, getTodaySteps);
-router.get('/history', protect, getStepsHistory);
+router.use(auth);
+
+router.post('/log', logSteps);
+router.get('/today', getTodaySteps);
+router.get('/history', getStepsHistory);
 
 export default router;

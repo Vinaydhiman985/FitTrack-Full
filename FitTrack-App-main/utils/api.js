@@ -5,30 +5,36 @@ const FALLBACK_PORT = '5000';
 const REQUEST_TIMEOUT_MS = 10000;
 
 function getExpoHostUrl() {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-  if (envUrl) return envUrl;
+  let url = process.env.EXPO_PUBLIC_API_URL?.trim();
 
-  const appConfigUrl = Constants.expoConfig?.extra?.apiUrl?.trim?.();
-  if (appConfigUrl) return appConfigUrl;
+  if (!url) {
+    const appConfigUrl = Constants.expoConfig?.extra?.apiUrl?.trim?.();
+    if (appConfigUrl) url = appConfigUrl;
+  }
 
-  const hostCandidates = [
-    Constants.expoConfig?.hostUri,
-    Constants.expoGoConfig?.debuggerHost,
-    Constants.manifest2?.extra?.expoGo?.debuggerHost,
-  ].filter(Boolean);
+  if (!url) {
+    const hostCandidates = [
+      Constants.expoConfig?.hostUri,
+      Constants.expoGoConfig?.debuggerHost,
+      Constants.manifest2?.extra?.expoGo?.debuggerHost,
+    ].filter(Boolean);
 
-  if (hostCandidates.length > 0) {
-    const [host] = String(hostCandidates[0]).split(':');
-    if (host) {
-      return `http://${host}:${FALLBACK_PORT}`;
+    if (hostCandidates.length > 0) {
+      const [host] = String(hostCandidates[0]).split(':');
+      if (host) url = `http://${host}:${FALLBACK_PORT}`;
     }
   }
 
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000';
+  if (!url) {
+    url = `http://localhost:${FALLBACK_PORT}`;
   }
 
-  return 'http://DESKTOP-T6DNO97.local:5000';
+  // FORCE FIX: On Android emulators, 'localhost' or '127.0.0.1' never works for the host machine.
+  if (Platform.OS === 'android' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+    return `http://10.0.2.2:${FALLBACK_PORT}`;
+  }
+
+  return url;
 }
 
 export const API_BASE_URL = getExpoHostUrl().replace(/\/+$/, '');
@@ -67,7 +73,7 @@ async function request(path, { method = 'GET', token, body } = {}) {
       throw new Error('Request timed out. Please check your connection.');
     }
     if (error.message === 'Network request failed') {
-      throw new Error('Cannot reach the server. Check API URL or network.');
+      throw new Error(`Cannot reach the server at ${API_BASE_URL}. Please check if the backend is running and your API URL is correct.`);
     }
     throw error;
   } finally {
@@ -87,4 +93,7 @@ export const api = {
   getTodaySteps: (token) => request('/api/steps/today', { token }),
   getStepsHistory: (token) => request('/api/steps/history', { token }),
   logSteps: (token, steps) => request('/api/steps/log', { method: 'POST', token, body: { steps } }),
+  listTerritories: (token) => request('/api/territory', { token }),
+  claimTerritory: (token, body) => request('/api/territory/claim', { method: 'POST', token, body }),
+  battleTerritory: (token, body) => request('/api/territory/battle', { method: 'POST', token, body }),
 };

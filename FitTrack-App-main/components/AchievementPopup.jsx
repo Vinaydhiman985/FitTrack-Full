@@ -1,5 +1,5 @@
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useApp } from '../../hooks';
+import { useApp } from '../hooks';
 
 const CONF_COLORS = ['#F4621F','#F59E0B','#7C3AED','#16A34A','#06B6D4','#EF4444','#F472B6'];
 

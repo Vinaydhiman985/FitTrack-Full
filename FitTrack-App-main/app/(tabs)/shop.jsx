@@ -14,8 +14,8 @@ import {
 import { AVATAR_CONFIGS } from '../../constants';
 import { useApp } from '../../hooks';
 import { api } from '../../utils/api';
-import WalkingAvatar from '../components/WalkingAvatar';
-import Avatar3DViewer from '../components/Avatar3DViewer';
+import WalkingAvatar from '../../components/WalkingAvatar';
+import Avatar3DViewer from '../../components/Avatar3DViewer';
 
 const RARITY = {
   0:    { label: 'Free',      color: '#6B7280', bg: '#F3F4F6' },

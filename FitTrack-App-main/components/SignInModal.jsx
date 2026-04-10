@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { useEffect, useRef } from 'react';
+import { useApp } from '../hooks';
 
 /**
  * SignInModal — shown when user tries to access a protected feature without logging in.

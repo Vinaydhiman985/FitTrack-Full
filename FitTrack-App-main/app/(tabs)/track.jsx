@@ -1,9 +1,9 @@
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
 import { useApp } from '../../hooks';
 import { useTracking } from '../../hooks/useTracking';
+import TrackMap from '../../components/Maps/TrackMap';
 
 export default function TrackingScreen({ onNav }) {
   const { dark } = useApp();
@@ -21,9 +21,11 @@ export default function TrackingScreen({ onNav }) {
       const coords = {
         latitude: current.coords.latitude,
         longitude: current.coords.longitude,
+        latitudeDelta: 0.003,
+        longitudeDelta: 0.003,
       };
       setTrackLocation(coords);
-      setTrackRoute([coords]);
+      setTrackRoute([{ latitude: coords.latitude, longitude: coords.longitude }]);
 
       locationRef.current = await Location.watchPositionAsync(
         {
@@ -35,11 +37,12 @@ export default function TrackingScreen({ onNav }) {
           const newCoords = {
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,
+            latitudeDelta: 0.003,
+            longitudeDelta: 0.003,
           };
           setTrackLocation(newCoords);
           setTrackRoute(prev => [...prev, newCoords]);
 
-          // Move map to follow player
           mapRef.current?.animateToRegion({
             latitude: newCoords.latitude,
             longitude: newCoords.longitude,
@@ -84,51 +87,16 @@ export default function TrackingScreen({ onNav }) {
         </View>
       </View>
 
-      {/* Real Mini Map */}
+      {/* Real Mini Map (Wrapped for Web Compatibility) */}
       <View style={styles.miniMap}>
         {trackLocation ? (
           <>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={{
-                latitude: trackLocation.latitude,
-                longitude: trackLocation.longitude,
-                latitudeDelta: 0.003,
-                longitudeDelta: 0.003,
-              }}
-              scrollEnabled={false}
-              zoomEnabled={false}
-              pitchEnabled={false}
-              rotateEnabled={false}
-              userInterfaceStyle={dark ? 'dark' : 'light'}
-            >
-              {/* Route line */}
-              {trackRoute.length > 1 && (
-                <Polyline
-                  coordinates={trackRoute}
-                  strokeColor="#F4621F"
-                  strokeWidth={4}
-                />
-              )}
-
-              {/* Start point */}
-              {trackRoute.length > 0 && (
-                <Marker coordinate={trackRoute[0]} anchor={{ x: 0.5, y: 0.5 }}>
-                  <View style={styles.startDot} />
-                </Marker>
-              )}
-
-              {/* Player position */}
-              <Marker coordinate={trackLocation} anchor={{ x: 0.5, y: 0.5 }}>
-                <View style={styles.miniPlayerWrap}>
-                  <View style={styles.miniPlayerPulse} />
-                  <View style={styles.miniPlayerDot}>
-                    <Text style={styles.miniPlayerEmoji}>🏃</Text>
-                  </View>
-                </View>
-              </Marker>
-            </MapView>
+            <TrackMap 
+              dark={dark}
+              mapRef={mapRef}
+              region={trackLocation}
+              routeCoords={trackRoute}
+            />
 
             {/* Location badge */}
             <View style={styles.locationBadge}>
@@ -252,7 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a2535',
     position: 'relative',
   },
-  map: { width: '100%', height: '100%' },
   miniMapLoading: {
     flex: 1, alignItems: 'center',
     justifyContent: 'center', gap: 8,
@@ -274,39 +241,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
   },
   routeLengthText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-
-  // Player markers
-  miniPlayerWrap: {
-    width: 40, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  miniPlayerPulse: {
-    position: 'absolute',
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(244,98,31,0.25)',
-  },
-  miniPlayerDot: {
-    width: 26, height: 26, borderRadius: 13,
-    backgroundColor: '#F4621F',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: 'white',
-  },
-  miniPlayerEmoji: { fontSize: 13 },
-  startDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#16A34A',
-    borderWidth: 2, borderColor: 'white',
-  },
-
-  banner: {
-    marginHorizontal: 20, marginVertical: 12,
-    backgroundColor: 'rgba(124,58,237,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(124,58,237,0.3)',
-    borderRadius: 14, padding: 12,
-  },
-  bannerTitle: { fontSize: 12, fontWeight: '700', color: '#7C3AED' },
-  bannerSub: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 },
 
   stepsWrap: { alignItems: 'center', paddingVertical: 16 },
   stepsCount: { fontSize: 64, fontWeight: '800', color: '#fff', lineHeight: 64 },
