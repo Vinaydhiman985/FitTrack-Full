@@ -3,11 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --port 8082 --max-workers 1",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "android": "expo start --android --port 8082 --max-workers 1",
+    "ios": "expo start --ios --port 8082 --max-workers 1",
+    "web": "expo start --web --port 8082 --max-workers 1",
     "lint": "expo lint"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "@tensorflow/tfjs-core": "^4.22.0",
     "@tensorflow/tfjs-react-native": "^0.8.0",
     "expo": "~54.0.33",
-    "expo-three": "^11.3.0",
+    "expo-three": "^8.0.0",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
     "expo-file-system": "~19.0.21",

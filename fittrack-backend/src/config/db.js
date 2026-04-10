@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
-
-const DEFAULT_URI = 'mongodb://127.0.0.1:27017/fittrack';
+import config from './env.js';
 
 const connectDB = async () => {
   try {
-    const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || DEFAULT_URI;
-    await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 });
-    console.log('✅ MongoDB connected');
+    const conn = await mongoose.connect(config.mongoUri);
+    console.log(`[db] MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
-    process.exit(1);
+    console.error(`[db] MongoDB Connection Error: ${error.message}`);
+    console.warn('⚠️ Server is running without a database connection. Database operations will fail.');
   }
 };
 

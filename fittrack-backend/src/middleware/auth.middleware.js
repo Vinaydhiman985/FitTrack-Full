@@ -1,23 +1,29 @@
 import jwt from 'jsonwebtoken';
+import config from '../config/env.js';
 import User from '../models/user.model.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fittrack_default_secret';
-
-const protect = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Not authorized, no token' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authorization token required' });
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = await User.findById(decoded.userId).select('-password');
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authorized, user missing' });
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, config.jwtSecret);
+    
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
     }
+
+    req.user = user;
+    req.token = token;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Not authorized, invalid token' });
+    console.error('[auth middleware] error:', error.message);
+    res.status(401).json({ error: 'Not authorized' });
   }
 };
 
-export default protect;
+export default auth;

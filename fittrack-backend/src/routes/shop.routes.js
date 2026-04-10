@@ -1,11 +1,13 @@
 import express from 'express';
 import { getAvatars, buyAvatar, equipAvatar } from '../controllers/shop.controller.js';
-import protect from '../middleware/auth.middleware.js';
+import auth from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/avatars', protect, getAvatars);
-router.post('/buy', protect, buyAvatar);
-router.post('/equip', protect, equipAvatar);
+router.use(auth);
+
+router.get('/avatars', getAvatars);
+router.post('/buy', buyAvatar);
+router.post('/equip', equipAvatar);
 
 export default router;

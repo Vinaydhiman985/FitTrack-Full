@@ -1,86 +1,119 @@
+import asyncHandler from '../utils/asyncHandler.js';
+import config from '../config/env.js';
+import ShopItem from '../models/shopItem.model.js';
 import User from '../models/user.model.js';
 
-// Keep this list in sync with mobile constants/AVATAR_CONFIGS for prices + ids.
-// Assets are resolved at runtime using buildAvatarWithAssets().
-const AVATARS = [
-  { id: 'blaze',  name: 'Blaze',         price: 0,    previewFile: 'blaze.png',  modelFile: null },
-  { id: 'nova',   name: 'Nova',          price: 500,  previewFile: 'nova.png',   modelFile: null },
-  { id: 'surge',  name: 'Surge',         price: 800,  previewFile: 'surge.png',  modelFile: null },
-  { id: 'viper',  name: 'Viper',         price: 1500, previewFile: 'viper.png',  modelFile: null },
-  { id: 'frost',  name: 'Frost',         price: 2500, previewFile: 'frost.png',  modelFile: null },
-  { id: 'legend', name: 'Legend',        price: 5000, previewFile: 'legend.png', modelFile: null },
-  // 3D-inspired additions (drop your GLB/PNG into /public/avatars and set modelFile/previewFile)
-  { id: 'fae',    name: 'Fae Warden',    price: 800,  previewFile: 'fae.png',    modelFile: 'fae.glb' },
-  { id: 'cyber',  name: 'Cyber Ninja',   price: 1500, previewFile: 'cyber.png',  modelFile: 'cyber.glb' },
-  { id: 'mech',   name: 'Pocket Mech',   price: 2500, previewFile: 'mech.png',   modelFile: 'mech.glb' },
-  { id: 'astral', name: 'Astral Scout',  price: 5000, previewFile: 'astral.png', modelFile: 'astral.glb' },
+const DEFAULT_AVATARS = [
+  { slug: 'blaze', name: 'Blaze', price: 0, previewFile: 'blaze.png', modelFile: null },
+  { slug: 'nova', name: 'Nova', price: 500, previewFile: 'nova.png', modelFile: null },
+  { slug: 'surge', name: 'Surge', price: 800, previewFile: 'surge.png', modelFile: null },
+  { slug: 'viper', name: 'Viper', price: 1500, previewFile: 'viper.png', modelFile: null },
+  { slug: 'frost', name: 'Frost', price: 2500, previewFile: 'frost.png', modelFile: null },
+  { slug: 'legend', name: 'Legend', price: 5000, previewFile: 'legend.png', modelFile: null },
+  { slug: 'fae', name: 'Fae Warden', price: 800, previewFile: 'fae.png', modelFile: 'fae.glb' },
+  { slug: 'cyber', name: 'Cyber Ninja', price: 1500, previewFile: 'cyber.png', modelFile: 'cyber.glb' },
+  { slug: 'mech', name: 'Pocket Mech', price: 2500, previewFile: 'mech.png', modelFile: 'mech.glb' },
+  { slug: 'astral', name: 'Astral Scout', price: 5000, previewFile: 'astral.png', modelFile: 'astral.glb' },
 ];
 
-const buildAssetBase = (req) => {
-  if (process.env.ASSET_BASE_URL) return process.env.ASSET_BASE_URL.replace(/\/+$/, '');
-  const host = req.get('host');
-  return `${req.protocol}://${host}/static/avatars`;
+const getAssetBaseUrl = (req) => {
+  if (config.assetBaseUrl) return config.assetBaseUrl.replace(/\/+$/, '');
+  return `${req.protocol}://${req.get('host')}/static/avatars`;
 };
 
-const buildAvatarWithAssets = (avatar, req) => {
-  const base = buildAssetBase(req);
+const formatAvatar = (item, req) => {
+  const base = getAssetBaseUrl(req);
   return {
-    ...avatar,
-    previewStill: avatar.previewFile ? `${base}/${avatar.previewFile}` : avatar.previewStill || null,
-    modelUrl: avatar.modelFile ? `${base}/${avatar.modelFile}` : avatar.modelUrl || null,
+    ...item,
+    id: item.slug,
+    previewStill: item.previewFile ? `${base}/${item.previewFile}` : (item.previewStill || null),
+    modelUrl: item.modelFile ? `${base}/${item.modelFile}` : (item.modelUrl || null),
   };
 };
 
-export const getAvatars = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    const avatars = AVATARS.map((avatar) => {
-      const enriched = buildAvatarWithAssets(avatar, req);
-      return {
-        ...enriched,
-        owned: user.ownedAvatars.includes(avatar.id),
-        equipped: user.avatar === avatar.id,
-      };
-    });
-    res.status(200).json({ data: avatars, coins: user.coins });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+const ensureItemsSeeded = async () => {
+  const count = await ShopItem.countDocuments();
+  if (count === 0) {
+    const items = DEFAULT_AVATARS.map(a => ({
+      ...a,
+      type: 'avatar',
+      active: true,
+      metadata: { seeded: true }
+    }));
+    await ShopItem.insertMany(items);
   }
 };
 
-export const buyAvatar = async (req, res) => {
-  try {
-    const { avatarId } = req.body;
-    const user = await User.findById(req.user._id);
-    const avatar = AVATARS.find((a) => a.id === avatarId);
-    if (!avatar) return res.status(404).json({ error: 'Avatar not found' });
-    if (user.ownedAvatars.includes(avatarId)) return res.status(400).json({ error: 'Avatar already owned' });
-    if (user.coins < avatar.price) return res.status(400).json({ error: 'Not enough coins' });
-    user.coins -= avatar.price;
-    user.ownedAvatars.push(avatarId);
-    await user.save();
-    res.status(200).json({
-      message: avatar.name + ' purchased!',
-      coins: user.coins,
-      ownedAvatars: user.ownedAvatars,
-      avatar: buildAvatarWithAssets(avatar, req),
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// @desc    Get all active avatars
+// @route   GET /api/shop/avatars
+export const getAvatars = asyncHandler(async (req, res) => {
+  await ensureItemsSeeded();
+  const user = req.user;
+  const items = await ShopItem.find({ type: 'avatar', active: true }).sort({ price: 1 });
 
-export const equipAvatar = async (req, res) => {
-  try {
-    const { avatarId } = req.body;
-    const user = await User.findById(req.user._id);
-    const avatar = AVATARS.find((a) => a.id === avatarId);
-    if (!avatar) return res.status(404).json({ error: 'Avatar not found' });
-    if (!user.ownedAvatars.includes(avatarId)) return res.status(400).json({ error: 'Avatar not owned' });
-    user.avatar = avatarId;
-    await user.save();
-    res.status(200).json({ message: avatar.name + ' equipped!', avatar: user.avatar });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  const avatars = items.map(item => {
+    const avatarObj = item.toObject();
+    const formatted = formatAvatar(avatarObj, req);
+    return {
+      ...formatted,
+      owned: user.ownedAvatars.includes(item.slug),
+      equipped: user.avatar === item.slug,
+    };
+  });
+
+  res.json({ data: avatars, coins: user.coins });
+});
+
+// @desc    Buy an avatar
+// @route   POST /api/shop/buy
+export const buyAvatar = asyncHandler(async (req, res) => {
+  const { avatarId } = req.body;
+  const user = await User.findById(req.user._id);
+  const item = await ShopItem.findOne({ slug: avatarId, type: 'avatar', active: true });
+
+  if (!item) {
+    res.status(404);
+    throw new Error('Avatar not found');
   }
-};
+
+  if (user.ownedAvatars.includes(avatarId)) {
+    res.status(400);
+    throw new Error('You already own this avatar');
+  }
+
+  if (user.coins < item.price) {
+    res.status(400);
+    throw new Error('Not enough coins');
+  }
+
+  user.coins -= item.price;
+  user.ownedAvatars.push(avatarId);
+  await user.save();
+
+  res.json({
+    message: `${item.name} purchased successfully`,
+    coins: user.coins,
+    ownedAvatars: user.ownedAvatars,
+    avatar: formatAvatar(item.toObject(), req)
+  });
+});
+
+// @desc    Equip an avatar
+// @route   POST /api/shop/equip
+export const equipAvatar = asyncHandler(async (req, res) => {
+  const { avatarId } = req.body;
+  const user = await User.findById(req.user._id);
+  
+  if (!user.ownedAvatars.includes(avatarId)) {
+    res.status(400);
+    throw new Error('You do not own this avatar');
+  }
+
+  user.avatar = avatarId;
+  await user.save();
+
+  res.json({
+    message: 'Avatar equipped successfully',
+    avatar: user.avatar
+  });
+});
