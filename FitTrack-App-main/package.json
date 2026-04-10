@@ -3,11 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "set \"CI=true\" && expo start --port 8082 --max-workers 1 --offline",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "android": "set \"CI=true\" && expo start --android --port 8082 --max-workers 1 --offline",
+    "ios": "set \"CI=true\" && expo start --ios --port 8082 --max-workers 1 --offline",
+    "web": "set \"CI=true\" && expo start --web --port 8082 --max-workers 1 --offline",
     "lint": "expo lint"
   },
   "dependencies": {
